@@ -32,6 +32,8 @@ async function register() {
 
   try {
     const credential = await navigator.credentials.create(options);
+    const id = arrayBufferToBase64(credential.rawId);
+    localStorage.setItem("credentialId", id);
     alert("✅ Fingerprint Registered!");
   } catch (err) {
     alert("❌ Registration failed: " + err);
@@ -45,10 +47,23 @@ async function startAuth() {
     return;
   }
 
+  const storedId = localStorage.getItem("credentialId");
+  if (!storedId) {
+    alert("❌ No fingerprint registered. Please register first.");
+    return;
+  }
+
+  const allowCred = [{
+    type: "public-key",
+    id: base64ToArrayBuffer(storedId),
+    transports: ["internal"]
+  }];
+
   const options = {
     publicKey: {
       challenge: new Uint8Array(32),
       timeout: 60000,
+      allowCredentials: allowCred,
       userVerification: "required"
     }
   };
@@ -60,4 +75,20 @@ async function startAuth() {
   } catch (err) {
     alert("❌ Authentication failed: " + err);
   }
+}
+
+function arrayBufferToBase64(buffer) {
+  const bytes = new Uint8Array(buffer);
+  let binary = '';
+  for (let b of bytes) binary += String.fromCharCode(b);
+  return btoa(binary);
+}
+
+function base64ToArrayBuffer(base64) {
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return bytes.buffer;
 }
