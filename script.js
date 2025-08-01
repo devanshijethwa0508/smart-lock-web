@@ -10,6 +10,34 @@ function clearPin() {
   document.getElementById('pinInput').value = '';
 }
 
+async function register() {
+  const options = {
+    publicKey: {
+      challenge: new Uint8Array(32),
+      rp: { name: "Smart Lock" },
+      user: {
+        id: new Uint8Array(16),
+        name: "user@example.com",
+        displayName: "Smart Lock User"
+      },
+      pubKeyCredParams: [{ type: "public-key", alg: -7 }],
+      authenticatorSelection: {
+        authenticatorAttachment: "platform",
+        userVerification: "required"
+      },
+      timeout: 60000,
+      attestation: "none"
+    }
+  };
+
+  try {
+    const credential = await navigator.credentials.create(options);
+    alert("✅ Fingerprint Registered!");
+  } catch (err) {
+    alert("❌ Registration failed: " + err);
+  }
+}
+
 async function startAuth() {
   const pin = document.getElementById('pinInput').value;
   if (pin !== "1234") {
@@ -28,8 +56,8 @@ async function startAuth() {
   try {
     const credential = await navigator.credentials.get(options);
     alert("✅ Authenticated!");
-    fetch("http://192.168.4.1/unlock", { method: "POST" }); // replace with ESP8266 IP
+    fetch("http://192.168.4.1/unlock", { method: "POST" }); // Replace with your ESP8266 IP
   } catch (err) {
-    alert("❌ Authentication failed");
+    alert("❌ Authentication failed: " + err);
   }
 }
